@@ -1,6 +1,10 @@
 #include <iostream>
 #include "parser.h"
 #include "ppm.h"
+#include "ray.h"
+#include "utility.h"
+#include "camera_bundle.h"
+#include "vec3.h"
 
 typedef unsigned char RGB[3];
 
@@ -30,23 +34,40 @@ int main(int argc, char* argv[])
         {   0,   0,   0 },  // Black
     };
 
-    int width = 640, height = 480;
-    int columnWidth = width / 8;
+    for(auto & cam_config : scene.cameras){
+        int image_width = cam_config.image_width, image_height = cam_config.image_height;
+        struct ImagePlane im_plane = {cam_config.near_plane.x , cam_config.near_plane.y, cam_config.near_plane.z, cam_config.near_plane.w, cam_config.near_distance};
+        int columnWidth = image_width/8;
+        unsigned char* image = new unsigned char [image_width * image_height * 3];
+        float pixel_width = (im_plane.right-im_plane.left)/image_width;
+        float pixel_height =  (im_plane.top-im_plane.bottom)/image_height;
+        Vec3<float> eye(cam_config.position);
+        Vec3<float> gaze(cam_config.gaze);
+        Vec3<float> up(cam_config.up);
+        CameraBundle camera_bundle={eye, gaze, up.cross(gaze.multScalar(-1.0)), cam_config.up,im_plane};
 
-    unsigned char* image = new unsigned char [width * height * 3];
+        /* RAY TRACER LOOP CAUTION */
+        //TODO: implement the loop
+       /*
+        for each pixel do
+            compute viewing (eye, primary) rays
+            find the first object hit by ray and its surface normal n
+            set pixel color to value computed from hit point, light, and n
+        */
 
-    int i = 0;
-    for (int y = 0; y < height; ++y)
-    {
-        for (int x = 0; x < width; ++x)
-        {
-            int colIdx = x / columnWidth;
-            image[i++] = BAR_COLOR[colIdx][0];
-            image[i++] = BAR_COLOR[colIdx][1];
-            image[i++] = BAR_COLOR[colIdx][2];
+        for(int j = 0; j < image_height; j++){
+            for(int i = 0; i < image_width; i++){
+                Ray ray(i,j, pixel_width, pixel_height, camera_bundle);
+//                Vec3f pixel;
+//                Vec3f rayColor;
+//                pixel = ray.o.addVector(ray.d);
+//                rayColor = ray.computeColor(sphereArr,sphereNum,light);
+//                image[i][j].x = (int) (rayColor.x * 255+0.5);
+//                image[i][j].y = (int) (rayColor.y * 255+0.5);
+//                image[i][j].z = (int) (rayColor.z * 255+0.5);
+            }
         }
+        write_ppm(cam_config.image_name.c_str(), image, image_width, image_height);
     }
-
-    write_ppm("test.ppm", image, width, height);
 
 }

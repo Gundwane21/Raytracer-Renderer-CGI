@@ -1,2 +1,2 @@
-all:
-	g++ *.cpp -o raytracer -std=c++11
+test:
+	g++ parser.cpp ppm.cpp ray.cpp sphere.cpp  tinyxml2.cpp   tester.cpp -o tester -std=c++11

@@ -1,3 +1,6 @@
+#ifndef __RAYTRACER_H__
+#define __RAYTRACER_H__
+
 #include <bits/stdc++.h>
 #include <limits>
 
@@ -64,3 +67,5 @@ class Ray {
 
     Vec3f computeColor(Sphere sphereList[], int sphereNum,  Vec3f light);
 };
+
+#endif
