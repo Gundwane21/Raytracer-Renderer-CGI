@@ -1,7 +1,5 @@
 //
 //
-
-
 #include "ray.h"
 
 
@@ -17,50 +15,97 @@ Ray::Ray(const int i, const int j, const float pixel_width, const float pixel_he
     this->d  = s.addVector(cb.eye.multScalar(-1));
 }
 
-//Vec3<float> Ray::computeColor(Sphere sphereList[], int sphereNum,  Vec3<float> light){
-//    float  minT = 9000;
-//    int minI = -1;
-//    float t;//intersection t
-//
-//    Vec3<float> color;
-//    Vec3<float> normal;
-//
-//    Vec3<float> intersectionPoint;
-//    Vec3<float> pointToLight;
-//
-//    for (int i = 0 ; i < sphereNum ; i++){
-//        t = this->intersectRayWithSphere( sphereList[i]);
-//        //printf("sphere %d t: %f, minT: %f   \n", i , t , minT);
-//        if (t < minT && t >= 0){ //could be t >= 0
-//            color = sphereList[i].color;
-//            minI = i;
-//            minT = t;
-//        }
-//    }
-//
-//
-//    if(minI != -1) {
-//        intersectionPoint =  this->o.addVector(this->d.multScalar(minT));
-//        pointToLight = light.addVector(intersectionPoint.multScalar(-1));
-//        normal = intersectionPoint.addVector(sphereList[minI].center.multScalar(-1));
-//        pointToLight = pointToLight.normalize();
-//        normal = normal.normalize();
-//
-//        float dotProduct = pointToLight.dot(normal);
-//        if (dotProduct > 0)
-//            color = color.multScalar(dotProduct);
-//        else
-//            color.x = color.y = color.z = 0;
-//    }
-//    return color;
-//
-//}
+Vec3<float> Ray::computeColor(std::vector<Sphere> spheres, Vec3<int> background_color,
+    Vec3<float> ambient_light , std::vector<Material> materials , std::vector<PointLightSource> point_lights,
+    std::vector<Vec3<float>> vertices  ){
+    float  minT = 90000; //std::numeric_limits<float>::max();
+    int minI = -1;
+    float t;//intersection t
+
+   Vec3<float> intersectionPoint;
+      
+    //check intersection
+    for (int i = 0 ; i < spheres.size() ; i++){
+        t = this->intersectRayWithSphere( spheres.at(i),vertices);
+        if (minT != 90000)
+            printf("sphere %d t: %f, minT: %f   \n", i , t , minT);
+        if (t < minT && t >= 0){ //could be t >= 0
+            //color = spheres.at(i).color;
+            minI = i;
+            minT = t;
+        }
+    }
+    
+    // TODO :if NO INTERSECTION
+    Vec3<float> finalColor(background_color.x,background_color.y,background_color.z);
+
+    /* AMBIENT COMPONENT */
+    //  TODO: check if intersection exists
+    //  if( intersection_exists ){}
+    if (minI != -1 ){
+
+        //printf("intersection succesfull at t : %f \n", t);
+        Vec3<float> material_ambient_reflectance = materials.at(spheres.at(minI).material_id - 1).ambient_reflectance;
+        
+        finalColor =  ambient_light.multVectorsElementwise(material_ambient_reflectance);
+        
+        intersectionPoint =  this->o.addVector(this->d.multScalar(minT));       
+        
+        Vec3<float> sphere_center_vertex = vertices.at(spheres.at(minI).center_vertex_id-1);
+        Vec3<float> surfaceNormal;
+        surfaceNormal = this->calculateNormalVec(intersectionPoint,sphere_center_vertex);
+        surfaceNormal = surfaceNormal.normalize();
+        
+        /* Calculate Diffuse For all point light sources*/
+        for (int i = 0 ;  i < point_lights.size() ; i++){
+            //point_lights.at(i).position.addVector(sphere_center_vertex) ;
+            //Vec3<float> pointToLight = intersectionPoint.addVector(sphere_center_vertex.multScalar(-1));
+            Vec3<float> pointToLight = point_lights.at(i).position.addVector(intersectionPoint.multScalar(-1)); 
+            pointToLight = pointToLight.normalize();
+            
+            float dotProduct  = pointToLight.dot(surfaceNormal);
+            // homemade clamp function
+            float cosine = std::max(float(0),dotProduct);
+            cosine = std::min(dotProduct, float(1));
+            
+            // inverse square law
+            float inverse_square_law_denom = point_lights.at(i).position.findEuclidianDistanceSquared(intersectionPoint); 
+            float inverse_square_law =  cosine / inverse_square_law_denom;
+            Vec3<float> point_intensity = point_lights.at(i).intensity.multScalar(inverse_square_law);
+            
+
+            Vec3<float> diffuse_component = point_intensity.multVectorsElementwise( materials.at(spheres.at(i).material_id - 1).diffuse_reflectance );
+            
+            finalColor = finalColor.addVector(diffuse_component); 
+
+        }
+
+    }
+/*
+   if(minI != -1) {
+       intersectionPoint =  this->o.addVector(this->d.multScalar(minT));
+       pointToLight = light.addVector(intersectionPoint.multScalar(-1));
+       normal = intersectionPoint.addVector(sphereList[minI].center.multScalar(-1));
+       pointToLight = pointToLight.normalize();
+       normal = normal.normalize();
+
+       float dotProduct = pointToLight.dot(normal);
+       if (dotProduct > 0)
+           color = color.multScalar(dotProduct);
+       else
+           color.x = color.y = color.z = 0;
+   }*/
+   return finalColor;
+
+}
 
 
-float Ray::intersectRayWithSphere( Sphere sphere){
+float Ray::intersectRayWithSphere( Sphere sphere, std::vector<Vec3<float>> vertices){
     float  A,B,C;
     float delta;
-    Vec3<float> c  = sphere.center;
+    
+    Vec3<float> sphere_center_vertex = vertices.at(sphere.center_vertex_id-1);
+    Vec3<float> c  = sphere_center_vertex;
     float  t,t1,t2;
 
     B = 2*this->d.x*(this->o.x-c.x)+2*this->d.y*(this->o.y-c.y)+2*this->d.z*(this->o.z-c.z);
@@ -86,4 +131,10 @@ float Ray::intersectRayWithSphere( Sphere sphere){
         if (t1<t2) t=t1; else t=t2;
     }
     return t;
+}
+
+
+Vec3<float> Ray::calculateNormalVec(Vec3<float> intersection_point,Vec3<float> sphere_center_vertex){
+    return intersection_point.addVector(sphere_center_vertex.multScalar(-1));
+
 }
