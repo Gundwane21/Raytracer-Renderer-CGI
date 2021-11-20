@@ -56,29 +56,46 @@ Vec3<float> Ray::computeColor(std::vector<Sphere> spheres, Vec3<int> background_
         surfaceNormal = this->calculateNormalVec(intersectionPoint,sphere_center_vertex);
         surfaceNormal = surfaceNormal.normalize();
         
-        /* Calculate Diffuse For all point light sources*/
         for (int i = 0 ;  i < point_lights.size() ; i++){
-            //point_lights.at(i).position.addVector(sphere_center_vertex) ;
-            //Vec3<float> pointToLight = intersectionPoint.addVector(sphere_center_vertex.multScalar(-1));
-            Vec3<float> pointToLight = point_lights.at(i).position.addVector(intersectionPoint.multScalar(-1)); 
+            Vec3<float> pointToLight = point_lights.at(i).position.addVector(intersectionPoint.multScalar(-1));
             pointToLight = pointToLight.normalize();
-            
+
+            /* Calculate Diffuse For all point light sources*/
             float dotProduct  = pointToLight.dot(surfaceNormal);
             // homemade clamp function
             float cosine = std::max(float(0),dotProduct);
-            cosine = std::min(dotProduct, float(1));
-            
+            cosine = std::min(cosine, float(1));
+
             // inverse square law
             float inverse_square_law_denom = point_lights.at(i).position.findEuclidianDistanceSquared(intersectionPoint); 
             float inverse_square_law =  cosine / inverse_square_law_denom;
             Vec3<float> point_intensity = point_lights.at(i).intensity.multScalar(inverse_square_law);
-            
 
-            Vec3<float> diffuse_component = point_intensity.multVectorsElementwise( materials.at(spheres.at(i).material_id - 1).diffuse_reflectance );
-            
-            finalColor = finalColor.addVector(diffuse_component); 
+            Material material = materials.at(spheres.at(i).material_id - 1);
+            Vec3<float> diffuse_component = point_intensity.multVectorsElementwise( material.diffuse_reflectance );
+            finalColor = finalColor.addVector(diffuse_component);
+
+            /* Calculate Specular For all point light sources */
+            Vec3<float> pointToCameraVector = this->o.addVector(intersectionPoint.multScalar(-1));
+            Vec3<float> halfVector = pointToLight.addVector(pointToCameraVector);
+            halfVector = halfVector.normalize();
+            float dotProductHalfVec = halfVector.dot(surfaceNormal);
+
+            //clamp cosine
+            float cosineHalfVec =std::max(float(0),dotProductHalfVec);
+            cosineHalfVec = std::min(cosineHalfVec,float(1));
+
+            //TODO: check if normal and tolight vectors degree is 0 < x < 90
+
+            float cosineHalfVecPhongExp = pow(cosineHalfVec,material.phong_exponent);
+            inverse_square_law = cosineHalfVecPhongExp / inverse_square_law_denom ;
+    
+            Vec3<float> specular_component = point_lights.at(i).intensity.multScalar(inverse_square_law);
+            specular_component = specular_component.multVectorsElementwise( material.specular_reflectance);
+            finalColor = finalColor.addVector(specular_component);
 
         }
+
 
     }
 /*
