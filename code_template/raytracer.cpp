@@ -5,6 +5,7 @@
 #include "utility.h"
 #include "camera_bundle.h"
 #include "vec3.h"
+#include "triangle.h"
 
 typedef unsigned char RGB[3];
 
@@ -34,6 +35,17 @@ int main(int argc, char* argv[])
         {   0,   0,   0 },  // Black
     };
 
+    std::vector<Sphere> spheres;
+    std::vector<Triangle> triangles;
+    for(int i = 0; i<scene.spheres.size(); i++){
+        parser::Sphere sphere = scene.spheres[i];
+        spheres.emplace_back(sphere.radius, scene.materials[sphere.material_id], scene.vertex_data[sphere.center_vertex_id]);
+    }
+    for(int i = 0; i<scene.triangles.size(); i++){
+        parser::Triangle triangle = scene.triangles[i];
+        triangles.emplace_back(scene.materials[triangle.material_id], scene.vertex_data[triangle.indices.v0_id], scene.vertex_data[triangle.indices.v1_id], scene.vertex_data[triangle.indices.v2_id]);
+    }
+
     for(auto & cam_config : scene.cameras){
         int image_width = cam_config.image_width, image_height = cam_config.image_height;
         struct ImagePlane im_plane = {cam_config.near_plane.x , cam_config.near_plane.y, cam_config.near_plane.z, cam_config.near_plane.w, cam_config.near_distance};
@@ -58,10 +70,10 @@ int main(int argc, char* argv[])
         for(int j = 0; j < image_height; j++){
             for(int i = 0; i < image_width; i++){
                 Ray ray(i,j, pixel_width, pixel_height, camera_bundle);
-//                Vec3f pixel;
-//                Vec3f rayColor;
-//                pixel = ray.o.addVector(ray.d);
-//                rayColor = ray.computeColor(sphereArr,sphereNum,light);
+                Vec3<float> pixel;
+                Vec3<float> rayColor;
+                pixel = ray.o.addVector(ray.d);
+                rayColor = ray.computeColor(spheres, light);
 //                image[i][j].x = (int) (rayColor.x * 255+0.5);
 //                image[i][j].y = (int) (rayColor.y * 255+0.5);
 //                image[i][j].z = (int) (rayColor.z * 255+0.5);

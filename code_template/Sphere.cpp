@@ -4,9 +4,7 @@
 
 #include "sphere.h"
 
-Sphere::Sphere(){
-    this->radius = 0 ;
-    Vec3<float>  vec1,vec2;
-    this->center = vec1 ;
-    this->color = vec2;
+Sphere::Sphere(float radius, parser::Material material, parser::Vec3f center): radius(radius),
+material(Material(material)),
+center(Vec3<float>(center)){
 }

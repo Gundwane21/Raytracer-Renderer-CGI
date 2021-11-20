@@ -16,6 +16,7 @@ public:
     Vec3(const parser::Vec3f &);
     Vec3 multScalar(float scalar) const;
     Vec3 addVector(const Vec3 vec2) const;
+    Vec3 subtVector(const Vec3 vec2) const;
     float dot(Vec3 vec2);
     Vec3 cross(Vec3 vec2);
     Vec3 normalize();
@@ -38,9 +39,9 @@ Vec3<T>::Vec3(const parser::Vec3f & vec){
 
 template <class T>
 Vec3<T>::Vec3(T x, T y, T z){
-    this->x = x ;
-    this->y = y ;
-    this->z = z ;
+    this->x = x;
+    this->y = y;
+    this->z = z;
 }
 
 template <class T>
@@ -55,15 +56,24 @@ Vec3<T> Vec3<T>::multScalar(float scalar) const {
 template <class T>
 Vec3<T> Vec3<T>::addVector(const Vec3<T> vec2) const{
     Vec3 result;
-    result.x = this->x + vec2.x ;
-    result.y = this->y + vec2.y ;
-    result.z = this->z + vec2.z ;
+    result.x = this->x + vec2.x;
+    result.y = this->y + vec2.y;
+    result.z = this->z + vec2.z;
+    return result;
+}
+
+template <class T>
+Vec3<T> Vec3<T>::subtVector(const Vec3<T> vec2) const{
+    Vec3 result;
+    result.x = this->x - vec2.x;
+    result.y = this->y - vec2.y;
+    result.z = this->z - vec2.z;
     return result;
 }
 
 template <class T>
 float Vec3<T>::dot(Vec3<T> vec2){
-    return this->x * vec2.x + this->y * vec2.y + this->z * vec2.z ;
+    return this->x * vec2.x + this->y * vec2.y + this->z * vec2.z;
 }
 
 template <class T>
@@ -77,7 +87,7 @@ Vec3<T> Vec3<T>::cross(Vec3<T> vec2){
 
 template <class T>
 Vec3<T> Vec3<T>::normalize(){
-    return multScaler(1.0/sqrt(this->dot(*this)));
+    return multScalar(1.0/sqrt(this->dot(*this)));
 }
 
 

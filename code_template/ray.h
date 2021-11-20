@@ -9,16 +9,17 @@
 #include "utility.h"
 #include "camera_bundle.h"
 #include "sphere.h"
-#include "math.h"
+#include "triangle.h"
+#include <cmath>
 class Ray {
 public:
     Vec3<float> o;
     Vec3<float> d;
     Ray(int i,int j, float pixel_width, float pixel_height, const CameraBundle& camera_bundle);
-
     float intersectRayWithSphere(Sphere sphere);
-
-    //Vec3<float> computeColor(Sphere sphereList[], int sphereNum,  Vec3<float> light);
+    float intersectRayWithTriangle(Triangle triangle);
+    Vec3<float> computeColor(std::vector<Sphere> sphere_list, std::vector<Triangle> triangle_list,  Vec3<float> light);
+    static float calculateDeterminant(const std::vector<std::vector<float>> & matrix);
 };
 
 

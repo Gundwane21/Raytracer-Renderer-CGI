@@ -6,13 +6,16 @@
 #define GRAPH_HW1_SPHERE_H
 
 #include "vec3.h"
+#include "parser.h"
+#include "utility.h"
 
 
 class Sphere {
 public:
-    Vec3<float> center,color;
     float radius;
-    Sphere();
+    Vec3<float> center;
+    Material material;
+    Sphere(float radius, parser::Material, parser::Vec3f center);
 };
 
 
