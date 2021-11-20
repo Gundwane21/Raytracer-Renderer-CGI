@@ -103,8 +103,6 @@ float Vec3<T>::findEuclidianDistanceSquared(Vec3<T> vec2){
     return distance_squared;
 }
 
-
-
 //class Vec3i: public Vec3{
 //public:
 //    int x,y,z;

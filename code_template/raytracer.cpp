@@ -63,6 +63,7 @@ int main(int argc, char* argv[])
 
     Vec3<int> background_color(scene.background_color.x,scene.background_color.y,scene.background_color.z) ;
     Vec3<float> ambient_light(scene.ambient_light);
+    float shadow_ray_epsilon = scene.shadow_ray_epsilon;
  
     /* Get All Materials*/
     std::vector<Material> materials;
@@ -145,7 +146,7 @@ int main(int argc, char* argv[])
                 Vec3<float> pixel;
                 Vec3<float> rayColor;
                 pixel = ray.o.addVector(ray.d);
-                rayColor = ray.computeColor(spheres,background_color,ambient_light,materials,point_lights,vertices);
+                rayColor = ray.computeColor(spheres,background_color,shadow_ray_epsilon,ambient_light,materials,point_lights,vertices);
                 // if (!(rayColor.x == 0 && rayColor.y == 0 && rayColor.z == 0 )) 
                 //     printf("raycolor x : %f , y : %f , z: %f \n", rayColor.x, rayColor.y , rayColor.z);
 

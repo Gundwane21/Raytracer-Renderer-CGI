@@ -15,7 +15,12 @@ Ray::Ray(const int i, const int j, const float pixel_width, const float pixel_he
     this->d  = s.addVector(cb.eye.multScalar(-1));
 }
 
-Vec3<float> Ray::computeColor(std::vector<Sphere> spheres, Vec3<int> background_color,
+Ray::Ray(Vec3<float> origin,Vec3<float> direction){
+    this->o = origin;
+    this->d = direction;
+}
+
+Vec3<float> Ray::computeColor(std::vector<Sphere> spheres, Vec3<int> background_color,float shadow_ray_epsilon,
     Vec3<float> ambient_light , std::vector<Material> materials , std::vector<PointLightSource> point_lights,
     std::vector<Vec3<float>> vertices  ){
     float  minT = 90000; //std::numeric_limits<float>::max();
@@ -36,7 +41,7 @@ Vec3<float> Ray::computeColor(std::vector<Sphere> spheres, Vec3<int> background_
         }
     }
     
-    // TODO :if NO INTERSECTION
+    // if NO INTERSECTION
     Vec3<float> finalColor(background_color.x,background_color.y,background_color.z);
 
     /* AMBIENT COMPONENT */
@@ -44,21 +49,41 @@ Vec3<float> Ray::computeColor(std::vector<Sphere> spheres, Vec3<int> background_
     //  if( intersection_exists ){}
     if (minI != -1 ){
 
-        //printf("intersection succesfull at t : %f \n", t);
         Vec3<float> material_ambient_reflectance = materials.at(spheres.at(minI).material_id - 1).ambient_reflectance;
-        
         finalColor =  ambient_light.multVectorsElementwise(material_ambient_reflectance);
-        
-        intersectionPoint =  this->o.addVector(this->d.multScalar(minT));       
-        
+
+        intersectionPoint =  this->o.addVector(this->d.multScalar(minT));
+
         Vec3<float> sphere_center_vertex = vertices.at(spheres.at(minI).center_vertex_id-1);
         Vec3<float> surfaceNormal;
         surfaceNormal = this->calculateNormalVec(intersectionPoint,sphere_center_vertex);
         surfaceNormal = surfaceNormal.normalize();
-        
+
+        Vec3<float> pointToCameraVector = this->o.addVector(intersectionPoint.multScalar(-1));
+        pointToCameraVector = pointToCameraVector.normalize();
+
+
         for (int i = 0 ;  i < point_lights.size() ; i++){
             Vec3<float> pointToLight = point_lights.at(i).position.addVector(intersectionPoint.multScalar(-1));
             pointToLight = pointToLight.normalize();
+
+            /* Shadow Ray Intersection Test*/
+
+            Ray shadow_ray( intersectionPoint.addVector(surfaceNormal.multScalar(shadow_ray_epsilon))  , pointToLight );
+
+            //check intersection
+            float minT_shadow = 9000;
+            bool is_in_shadow = false;
+            for (int i = 0 ; i < spheres.size() ; i++){
+                float t_shadow = shadow_ray.intersectRayWithSphere( spheres.at(i),vertices);
+                if (minT_shadow != 90000 && t_shadow >= 0 ) {
+                    printf("sphere %d t: %f, minT: %f   \n", i, t, minT);
+                    is_in_shadow = true;
+                    break;
+                }
+            }
+            if(is_in_shadow)
+                continue;
 
             /* Calculate Diffuse For all point light sources*/
             float dotProduct  = pointToLight.dot(surfaceNormal);
@@ -74,29 +99,25 @@ Vec3<float> Ray::computeColor(std::vector<Sphere> spheres, Vec3<int> background_
             Material material = materials.at(spheres.at(i).material_id - 1);
             Vec3<float> diffuse_component = point_intensity.multVectorsElementwise( material.diffuse_reflectance );
             finalColor = finalColor.addVector(diffuse_component);
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             /* Calculate Specular For all point light sources */
-            Vec3<float> pointToCameraVector = this->o.addVector(intersectionPoint.multScalar(-1));
             Vec3<float> halfVector = pointToLight.addVector(pointToCameraVector);
             halfVector = halfVector.normalize();
-            float dotProductHalfVec = halfVector.dot(surfaceNormal);
+            float dotProductHalfVec = surfaceNormal.dot(halfVector);
 
             //clamp cosine
             float cosineHalfVec =std::max(float(0),dotProductHalfVec);
             cosineHalfVec = std::min(cosineHalfVec,float(1));
 
             //TODO: check if normal and tolight vectors degree is 0 < x < 90
-
             float cosineHalfVecPhongExp = pow(cosineHalfVec,material.phong_exponent);
             inverse_square_law = cosineHalfVecPhongExp / inverse_square_law_denom ;
-    
+
             Vec3<float> specular_component = point_lights.at(i).intensity.multScalar(inverse_square_law);
             specular_component = specular_component.multVectorsElementwise( material.specular_reflectance);
             finalColor = finalColor.addVector(specular_component);
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         }
-
-
     }
 /*
    if(minI != -1) {
