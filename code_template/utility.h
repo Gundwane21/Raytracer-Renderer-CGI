@@ -5,7 +5,6 @@
 #ifndef GRAPH_HW1_UTILITY_H
 #define GRAPH_HW1_UTILITY_H
 
-#include "vec3.h"
 
 struct ImagePlane{
     float left, right, bottom, top;
@@ -31,6 +30,11 @@ struct Material
     }
 };
 
+typedef struct {
+    int id;
+    Vec3<float> position;
+    Vec3<float> intensity;
+}PointLightSource;
 
 
 #endif //GRAPH_HW1_UTILITY_H

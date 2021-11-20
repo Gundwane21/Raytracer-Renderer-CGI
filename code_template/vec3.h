@@ -6,6 +6,7 @@
 #define GRAPH_HW1_VEC3_H
 
 #include "parser.h"
+#include "math.h"
 #include <typeinfo>
 template<typename T>
 class Vec3{
@@ -20,6 +21,8 @@ public:
     float dot(Vec3 vec2);
     Vec3 cross(Vec3 vec2);
     Vec3 normalize();
+    Vec3 multVectorsElementwise(Vec3 vec2);
+    float findEuclidianDistanceSquared(Vec3 vec2);
 };
 
 
@@ -90,6 +93,25 @@ Vec3<T> Vec3<T>::normalize(){
     return multScalar(1.0/sqrt(this->dot(*this)));
 }
 
+template <class T>
+Vec3<T> Vec3<T>::multVectorsElementwise(Vec3<T> vec2){
+    Vec3<T> result;
+    result.x = this->x * vec2.x;
+    result.y = this->y * vec2.y;
+    result.z = this->z * vec2.z;
+    return result;
+}
+
+template <class T>
+float Vec3<T>::findEuclidianDistanceSquared(Vec3<T> vec2){
+    Vec3<float> temp;
+    temp.x = this->x - vec2.x ;
+    temp.y = this->y - vec2.y ;
+    temp.z = this->z - vec2.z ;
+
+    float distance_squared = temp.dot(temp);
+    return distance_squared;
+}
 
 //class Vec3i: public Vec3{
 //public:
