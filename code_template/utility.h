@@ -4,13 +4,12 @@
 
 #ifndef GRAPH_HW1_UTILITY_H
 #define GRAPH_HW1_UTILITY_H
-
+#include "vec3.h"
 
 struct ImagePlane{
     float left, right, bottom, top;
     float distance;
 };
-
 
 struct Material
 {
@@ -35,6 +34,8 @@ typedef struct {
     Vec3<float> position;
     Vec3<float> intensity;
 }PointLightSource;
-
+namespace ObjectType{
+    enum ObjectType{Triangle,Sphere,Mesh};
+};
 
 #endif //GRAPH_HW1_UTILITY_H

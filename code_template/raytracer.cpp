@@ -6,6 +6,7 @@
 #include "camera_bundle.h"
 #include "vec3.h"
 
+
 typedef unsigned char RGB[3];
 
 void writePPM(Vec3<int> **image ,int nx,int ny)
@@ -92,7 +93,21 @@ int main(int argc, char* argv[])
         int image_width = cam_config.image_width, image_height = cam_config.image_height;
         struct ImagePlane im_plane = {cam_config.near_plane.x , cam_config.near_plane.y, cam_config.near_plane.z, cam_config.near_plane.w, cam_config.near_distance};
         int columnWidth = image_width/8;
-        unsigned char* image = new unsigned char [image_width * image_height * 3];
+
+        //unsigned char* image = new unsigned char [image_width * image_height * 3];
+        Vec3<int> ** image;
+        image = new Vec3<int>*[image_width];
+
+        for(int i =0 ; i < image_width  ;i++){
+            image[i] = new   Vec3<int>[image_height];
+        }
+
+        for (int  j  = 0 ; j <   image_height ; j++){
+            for(int i =0  ; i <  image_width ;i++ ){
+                image[i][j].x  =  image[i][j].y = image[i][j].z = 0;
+            }
+        }
+
         float pixel_width = (im_plane.right-im_plane.left)/image_width;
         float pixel_height =  (im_plane.top-im_plane.bottom)/image_height;
         Vec3<float> eye(cam_config.position);
@@ -116,7 +131,8 @@ int main(int argc, char* argv[])
                 Vec3<float> pixel;
                 Vec3<float> rayColor;
                 pixel = ray.o.addVector(ray.d);
-                rayColor = ray.computeColor(spheres,background_color,shadow_ray_epsilon,ambient_light,materials,point_lights,vertices);
+
+                rayColor = ray.computeColor(background_color,shadow_ray_epsilon,ambient_light,point_lights ,spheres,triangles);
                 // if (!(rayColor.x == 0 && rayColor.y == 0 && rayColor.z == 0 ))
                 //     printf("raycolor x : %f , y : %f , z: %f \n", rayColor.x, rayColor.y , rayColor.z);
 
@@ -129,7 +145,8 @@ int main(int argc, char* argv[])
 
             }
         }
-        write_ppm(cam_config.image_name.c_str(), image, image_width, image_height);
+        //write_ppm(cam_config.image_name.c_str(), image, image_width, image_height);
+        writePPM(image, image_width, image_height);
     }
 
 }

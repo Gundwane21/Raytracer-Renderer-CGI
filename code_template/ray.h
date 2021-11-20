@@ -24,11 +24,11 @@ public:
     float intersectRayWithTriangle(Triangle triangle);
     static float calculateDeterminant(const std::vector<std::vector<float>> & matrix);
     Ray(Vec3<float> origin,Vec3<float> direction);
-    float intersectRayWithSphere(Sphere sphere, std::vector<Vec3<float>> vertices);
+    float intersectRayWithSphere(Sphere sphere);
 
-    Vec3<float> computeColor(std::vector<Sphere> spheres ,Vec3<int> background_color,float shadow_ray_epsilon,
-            Vec3<float> ambient_light , std::vector<Material> materials , std::vector<PointLightSource> point_lights,
-            std::vector<Vec3<float>> vertices);
+    Vec3<float> computeColor( Vec3<int> background_color,float shadow_ray_epsilon,
+                              Vec3<float> ambient_light , std::vector<PointLightSource> point_lights, std::vector<Sphere> spheres
+                              , std::vector<Triangle> triangles);
     Vec3<float> calculateNormalVec(Vec3<float> intersection_point,Vec3<float> sphere_center_vertex);
 };
 
