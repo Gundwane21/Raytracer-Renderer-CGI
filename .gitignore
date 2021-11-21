@@ -1,3 +1,6 @@
 .idea/*
 .vscode/*
 cmake-build-debug
+.DS_Store
+code_template/raytracer
+code_template/output.ppm

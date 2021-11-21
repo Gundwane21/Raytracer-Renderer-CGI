@@ -23,13 +23,12 @@ Ray::Ray(Vec3<float> origin,Vec3<float> direction){
 }
 
 Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsilon,
-                               Vec3<float> ambient_light , std::vector<PointLightSource> point_lights, std::vector<Sphere> spheres
-                             , std::vector<Triangle> triangles){
+                               Vec3<float> ambient_light , std::vector<PointLightSource> & point_lights, std::vector<Sphere> & spheres
+                             , std::vector<Triangle> & triangles){
     float  minT = 90000; //std::numeric_limits<float>::max();
     int minI = -1;
     float t;//intersection t
     ObjectType::ObjectType object_type;
-
     Vec3<float> intersectionPoint;
 
     //check intersection
@@ -54,6 +53,17 @@ Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsil
             object_type = ObjectType::Triangle;
         }
     }
+
+//    for (int i = 0; i < meshes.size(); i++){
+//        for(auto & triangle: meshes.at(i).mesh_faces){
+//            t = intersectRayWithTriangle(triangle);
+//            if (t < minT && t >= 0){ //could be t >= 0
+//                minI = i;
+//                minT = t;
+//                object_type = ObjectType::Triangle;
+//            }
+//        }
+//    }
 
     // if NO INTERSECTION
     Vec3<float> finalColor(background_color.x,background_color.y,background_color.z);
@@ -89,7 +99,7 @@ Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsil
                 for (int i = 0; i < spheres.size(); i++) {
                     float t_shadow = shadow_ray.intersectRayWithSphere(spheres.at(i));
                     if (minT_shadow != 90000 && t_shadow >= 0) {
-                        printf("sphere %d t: %f, minT: %f   \n", i, t, minT);
+//                        printf("sphere %d t: %f, minT: %f   \n", i, t, minT);
                         is_in_shadow = true;
                         break;
                     }
@@ -156,10 +166,11 @@ Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsil
                 float minT_shadow = 9000;
                 bool is_in_shadow = false;
 
+                //TODO: KEREM BURASI BUG MI ?
                 for (int i = 0; i < spheres.size(); i++) {
                     float t_shadow = shadow_ray.intersectRayWithSphere(spheres.at(i));
                     if (minT_shadow != 90000 && t_shadow >= 0) {
-                        printf("sphere %d t: %f, minT: %f   \n", i, t, minT);
+//                        printf("sphere %d t: %f, minT: %f   \n", i, t, minT);
                         is_in_shadow = true;
                         break;
                     }
@@ -170,7 +181,7 @@ Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsil
                 for (int i = 0; i < triangles.size(); i++) {
                     float t_shadow = shadow_ray.intersectRayWithTriangle(triangles.at(i));
                     if (minT_shadow != 90000 && t_shadow >= 0) {
-                        printf("triangle %d t: %f, minT: %f   \n", i, t, minT);
+//                        printf("triangle %d t: %f, minT: %f   \n", i, t, minT);
                         is_in_shadow = true;
                         break;
                     }
@@ -245,7 +256,7 @@ float Ray::intersectRayWithSphere( Sphere sphere){
 float Ray::calculateDeterminant(const std::vector<std::vector<float>> & matrix ){
     float matrix_00 = matrix[0][0]*(matrix[1][1]*matrix[2][2]-matrix[1][2]*matrix[2][1]);
     float matrix_10 = matrix[1][0]*(matrix[0][1]*matrix[2][2]-matrix[0][2]*matrix[2][1]);
-    float matrix_20 = matrix[2][0]*(matrix[0][1]*matrix[1][2]-matrix[1][1]*matrix[1][2]);
+    float matrix_20 = matrix[2][0]*(matrix[0][1]*matrix[1][2]-matrix[1][1]*matrix[0][2]);
     return matrix_00 - matrix_10 + matrix_20;
 }
 
@@ -278,7 +289,7 @@ float Ray::intersectRayWithTriangle(Triangle triangle){
     beta = det_B/det_A;
     gama = det_G/det_A;
     t = det_T/det_A;
-    if(beta + gama > 1 || beta<0 || gama<0){
+    if((beta + gama) > 1 || beta<0 || gama<0 || t<0){
         return -1;
     }
     return t;

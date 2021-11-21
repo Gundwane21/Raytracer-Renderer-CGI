@@ -92,9 +92,9 @@ int main(int argc, char* argv[])
     for(auto& mesh: scene.meshes){
         std::vector<Triangle> mesh_faces;
         for(auto& face: mesh.faces){
-            mesh_faces.emplace_back(scene.materials[mesh.material_id-1], scene.vertex_data[face.v0_id-1], scene.vertex_data[face.v1_id-1], scene.vertex_data[face.v2_id-1]);
+            triangles.emplace_back(scene.materials[mesh.material_id-1], scene.vertex_data[face.v0_id-1], scene.vertex_data[face.v1_id-1], scene.vertex_data[face.v2_id-1]);
         }
-        meshes.emplace_back(scene.materials[mesh.material_id-1], mesh_faces);
+//        meshes.emplace_back(scene.materials[mesh.material_id-1], mesh_faces);
     }
 
     /* Get All Cameras and run raytracer loop */
@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
         for(int j = 0; j < image_height; j++){
             for(int i = 0; i < image_width; i++){
                 Ray ray(i,j, pixel_width, pixel_height, camera_bundle);
-
+                std::cout<< j<< "/" << image_height << " | " << i << "/" << image_width << "\r";
                 Vec3<float> pixel;
                 Vec3<float> rayColor;
                 pixel = ray.o.addVector(ray.d);
@@ -156,6 +156,23 @@ int main(int argc, char* argv[])
 
             }
         }
+//---------- delete between
+//        int i = 0;
+//        int j = 217;
+//        Ray ray(i,j, pixel_width, pixel_height, camera_bundle);
+//
+//        Vec3<float> pixel;
+//        Vec3<float> rayColor;
+//        pixel = ray.o.addVector(ray.d);
+//
+//        rayColor = ray.computeColor(background_color,shadow_ray_epsilon,ambient_light,point_lights ,spheres,triangles, meshes);
+//        // if (!(rayColor.x == 0 && rayColor.y == 0 && rayColor.z == 0 ))
+//        //     printf("raycolor x : %f , y : %f , z: %f \n", rayColor.x, rayColor.y , rayColor.z);
+//
+//        image[i][j].x = (int) rayColor.x;
+//        image[i][j].y = (int) rayColor.y;
+//        image[i][j].z = (int) rayColor.z;
+//----------delete between
         //write_ppm(cam_config.image_name.c_str(), image, image_width, image_height);
         writePPM(image, image_width, image_height);
     }
