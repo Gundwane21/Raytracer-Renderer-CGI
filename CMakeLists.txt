@@ -71,7 +71,7 @@ add_executable(Graph_Hw1
         sample_scenes_v2/outputs/bfc_on/monkey.ppm
         sample_scenes_v2/outputs/bfc_on/simple.ppm
         sample_scenes_v2/outputs/bfc_on/simple_reflectance.ppm
-        sample_scenes_v2/outputs/bfc_on/simple_shading.ppm code_template/Sphere.cpp code_template/Sphere.h code_template/utility.h code_template/camera_bundle.cpp code_template/camera_bundle.h code_template/triangle.cpp code_template/triangle.h code_template/shape.cpp code_template/shape.h code_template/mesh.cpp code_template/mesh.h)
+        sample_scenes_v2/outputs/bfc_on/simple_shading.ppm code_template/Sphere.cpp code_template/Sphere.h code_template/utility.h code_template/camera_bundle.cpp code_template/camera_bundle.h code_template/triangle.cpp code_template/triangle.h code_template/mesh.cpp code_template/mesh.h code_template/object.cpp code_template/object.h)
 
 add_executable(Graph_Hw1_Tester
         code_template/parser.cpp

@@ -190,7 +190,7 @@ Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsil
                 float inverse_square_law = cosine / inverse_square_law_denom;
                 Vec3<float> point_intensity = point_lights.at(i).intensity.multScalar(inverse_square_law);
 
-                Material material = spheres.at(minI).material;
+                Material material = triangles.at(minI).material;
                 Vec3<float> diffuse_component = point_intensity.multVectorsElementwise(material.diffuse);
                 finalColor = finalColor.addVector(diffuse_component);
                 /* Calculate Specular For all point light sources */
