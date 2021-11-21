@@ -10,9 +10,10 @@
 #include "triangle.h"
 
 class Mesh {
+public:
     Material material;
     std::vector<Triangle> mesh_faces;
-    Mesh(Material , std::vector<Triangle> &);
+    Mesh(parser::Material , std::vector<Triangle> &);
 };
 
 

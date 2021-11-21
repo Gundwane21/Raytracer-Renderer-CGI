@@ -7,6 +7,6 @@
 #include <utility>
 
 
-Mesh::Mesh(Material material, std::vector<Triangle>& triangle): material(material){
+Mesh::Mesh(parser::Material material, std::vector<Triangle>& triangle): material(material){
     this->mesh_faces = std::move(triangle);
 }
