@@ -30,7 +30,7 @@ Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsil
     float t;//intersection t
     ObjectType::ObjectType object_type;
 
-   Vec3<float> intersectionPoint;
+    Vec3<float> intersectionPoint;
 
     //check intersection
     for (int i = 0 ; i < spheres.size() ; i++){
@@ -57,12 +57,10 @@ Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsil
 
     // if NO INTERSECTION
     Vec3<float> finalColor(background_color.x,background_color.y,background_color.z);
-
     /* AMBIENT COMPONENT */
     //  TODO: check if intersection exists
     //  if( intersection_exists ){}
     if (minI != -1 ) {
-
         if (object_type == ObjectType::Sphere) {
             Vec3<float> material_ambient_reflectance = spheres.at(minI).material.ambient;
             finalColor = ambient_light.multVectorsElementwise(material_ambient_reflectance);
@@ -114,7 +112,6 @@ Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsil
                 Material material = spheres.at(minI).material;
                 Vec3<float> diffuse_component = point_intensity.multVectorsElementwise(material.diffuse);
                 finalColor = finalColor.addVector(diffuse_component);
-                ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 /* Calculate Specular For all point light sources */
                 Vec3<float> halfVector = pointToLight.addVector(pointToCameraVector);
                 halfVector = halfVector.normalize();
@@ -141,7 +138,7 @@ Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsil
 
             Vec3<float> surfaceNormal;
             /* TODO: calculate triangle surface normal*/
-            surfaceNormal = Vec3<float>{0,0,0};
+            surfaceNormal = triangles.at(minI).normal;
             surfaceNormal = surfaceNormal.normalize();
 
             Vec3<float> pointToCameraVector = this->o.subtVector(intersectionPoint);
@@ -196,7 +193,6 @@ Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsil
                 Material material = spheres.at(minI).material;
                 Vec3<float> diffuse_component = point_intensity.multVectorsElementwise(material.diffuse);
                 finalColor = finalColor.addVector(diffuse_component);
-                ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 /* Calculate Specular For all point light sources */
                 Vec3<float> halfVector = pointToLight.addVector(pointToCameraVector);
                 halfVector = halfVector.normalize();

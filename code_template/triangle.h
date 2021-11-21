@@ -14,7 +14,9 @@ class Triangle {
 public:
     Material material;
     Vec3<float> coords[3];
+    Vec3<float> normal;
     Triangle(parser::Material, parser::Vec3f , parser::Vec3f, parser::Vec3f);
+    void calculateNormal(Vec3<float> *);
 };
 
 

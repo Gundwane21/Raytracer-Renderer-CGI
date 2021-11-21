@@ -5,6 +5,7 @@
 #include "utility.h"
 #include "camera_bundle.h"
 #include "vec3.h"
+#include "mesh.h"
 
 
 typedef unsigned char RGB[3];
@@ -73,17 +74,27 @@ int main(int argc, char* argv[])
         point_lights.push_back(point_light);
         point_light_id++;
     }
-    /* Get All Spheres*/
+    /*Get All Objects */
     std::vector<Sphere> spheres;
     std::vector<Triangle> triangles;
-    for(int i = 0; i<scene.spheres.size(); i++){
-        parser::Sphere sphere = scene.spheres[i];
+    std::vector<Mesh> meshes;
+
+    /* Get All Spheres*/
+    for(auto& sphere: scene.spheres){
         spheres.emplace_back(sphere.radius, scene.materials[sphere.material_id-1], scene.vertex_data[sphere.center_vertex_id-1]);
     }
     /* Get All Triangles*/
-    for(int i = 0; i<scene.triangles.size(); i++){
-        parser::Triangle triangle = scene.triangles[i];
+    for(auto& triangle: scene.triangles){
         triangles.emplace_back(scene.materials[triangle.material_id-1], scene.vertex_data[triangle.indices.v0_id-1], scene.vertex_data[triangle.indices.v1_id-1], scene.vertex_data[triangle.indices.v2_id-1]);
+    }
+
+    /* Get All Meshes as Triangles*/
+    for(auto& mesh: scene.meshes){
+        std::vector<Triangle> mesh_faces;
+        for(auto& face: mesh.faces){
+            mesh_faces.emplace_back(scene.materials[mesh.material_id-1], scene.vertex_data[face.v0_id-1], scene.vertex_data[face.v1_id-1], scene.vertex_data[face.v2_id-1]);
+        }
+        meshes.emplace_back(scene.materials[mesh.material_id-1], mesh_faces);
     }
 
     /* Get All Cameras and run raytracer loop */

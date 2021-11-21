@@ -9,4 +9,11 @@ Triangle::Triangle(parser::Material material, parser::Vec3f v0, parser::Vec3f v1
     this->coords[0] = v0;
     this->coords[1] = v1;
     this->coords[2] = v2;
+    calculateNormal(this->coords);
+}
+
+void Triangle::calculateNormal(Vec3<float> *coords) {
+    Vec3<float> vec1 = coords[0].subtVector(coords[1]);
+    Vec3<float> vec2 = coords[2].subtVector(coords[1]);
+    this->normal = vec2.cross(vec1).normalize();
 }
