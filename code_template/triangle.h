@@ -9,14 +9,14 @@
 #include "parser.h"
 #include "utility.h"
 #include "vec3.h"
+#include "shape.h"
 
-class Triangle {
+class Triangle: public Shape{
 public:
-    Material material;
     Vec3<float> coords[3];
     Vec3<float> normal;
     Triangle(parser::Material, parser::Vec3f , parser::Vec3f, parser::Vec3f);
-    void calculateNormal(Vec3<float> *);
+    Vec3<float> calculateNormalVector(Vec3<float>& intersection_point) override;
 };
 
 

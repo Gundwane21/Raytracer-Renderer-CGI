@@ -78,10 +78,12 @@ int main(int argc, char* argv[])
     std::vector<Sphere> spheres;
     std::vector<Triangle> triangles;
     std::vector<Mesh> meshes;
+    std::vector<Shape *> shapes;
 
     /* Get All Spheres*/
     for(auto& sphere: scene.spheres){
         spheres.emplace_back(sphere.radius, scene.materials[sphere.material_id-1], scene.vertex_data[sphere.center_vertex_id-1]);
+        shapes.emplace_back(new Sphere(sphere.radius, scene.materials[sphere.material_id-1], scene.vertex_data[sphere.center_vertex_id-1]));
     }
     /* Get All Triangles*/
     for(auto& triangle: scene.triangles){

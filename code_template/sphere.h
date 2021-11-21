@@ -8,14 +8,15 @@
 #include "vec3.h"
 #include "parser.h"
 #include "utility.h"
+#include "shape.h"
 
 
-class Sphere {
+class Sphere: public Shape {
 public:
     float radius;
     Vec3<float> center;
-    Material material;
     Sphere(float radius, parser::Material, parser::Vec3f center);
+    Vec3<float> calculateNormalVector(Vec3<float>& intersection_point) override;
 };
 
 

@@ -5,6 +5,7 @@
 #define GRAPH_HW1_RAY_H
 
 #include "vec3.h"
+#include "shape.h"
 #include "sphere.h"
 #include "utility.h"
 #include "camera_bundle.h"
@@ -17,6 +18,7 @@
 #include "triangle.h"
 #include <cmath>
 #include "mesh.h"
+
 class Ray {
 public:
     Vec3<float> o;
