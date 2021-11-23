@@ -18,50 +18,45 @@ float shadow_ray_epsilon ;
 typedef unsigned char RGB[3];
 
 
-void writePPM(Vec3<int> **image ,int nx,int ny)
-{
-	int i,j;
-	FILE *fp;
+//void writePPM(Vec3<int> **image ,int nx,int ny)
+//{
+//	int i,j;
+//	FILE *fp;
+//
+//	fp = fopen("output.ppm","w");
+//
+//	fprintf(fp,"P3\n");
+//	fprintf(fp,"#output.ppm\n");
+//	fprintf(fp,"%d %d\n",nx,ny);
+//	fprintf(fp,"255\n");
+//	for (j=0;j<ny;j++)
+//	{
+//		for (i=0;i<nx;i++)
+//		{
+//			fprintf(fp,"%d %d %d\t",image[i][j].x,image[i][j].y,image[i][j].z);
+//		}
+//		fprintf(fp,"\n");
+//	}
+//	//system("convert output.ppm output.png");
+//	//system("rm output.ppm");
+//
+//}
 
-	fp = fopen("output.ppm","w");
 
-	fprintf(fp,"P3\n");
-	fprintf(fp,"#output.ppm\n");
-	fprintf(fp,"%d %d\n",nx,ny);
-	fprintf(fp,"255\n");
-	for (j=0;j<ny;j++)
-	{
-		for (i=0;i<nx;i++)
-		{
-			fprintf(fp,"%d %d %d\t",image[i][j].x,image[i][j].y,image[i][j].z);
-		}
-		fprintf(fp,"\n");
-	}
-	//system("convert output.ppm output.png");
-	//system("rm output.ppm");
-
-}
-
-void computeRaytracerThread(Vec3<int> ** image, int height_start, int height_end , CameraBundle& camera_bundle
-                            , int  image_width ,std::vector<Sphere> &spheres, std::vector<Triangle> &triangles
+void computeRaytracerThread(unsigned char * image, int height_start, int height_end , CameraBundle& camera_bundle
+                            , int  image_width, int image_height ,std::vector<Sphere> &spheres, std::vector<Triangle> &triangles
                             ,std::vector<PointLightSource> &point_lights, float  pixel_width,float  pixel_height  ){
     for(int j = height_start; j < height_end; j++){
-        for(int i = 0; i < image_width; i++){
-            Ray ray(i,j, pixel_width, pixel_height, camera_bundle);
+        for(int i = 0; i < image_width*3; i+=3){
+            Ray ray(i/3,j, pixel_width, pixel_height, camera_bundle);
             std::cout<< j<< "/" << bunny_im_height << " | " << i << "/" << image_width << "\r";
             Vec3<float> pixel;
             Vec3<float> rayColor;
             pixel = ray.o.addVector(ray.d);
-
             rayColor = ray.computeColor(background_color,shadow_ray_epsilon,ambient_light,point_lights ,spheres,triangles);
-
-            image[i][j].x = (int) rayColor.x;
-            image[i][j].y = (int) rayColor.y;
-            image[i][j].z = (int) rayColor.z;
-            // image[i * image_width +  j * image_height] = rayColor.x;
-            // image[i * image_width +  j * image_height + 1] = rayColor.y;
-            // image[i * image_width +  j * image_height + 2] = rayColor.z;
-
+            image[j*image_width*3 + i] = (unsigned char) rayColor.x;
+            image[j*image_width*3 + i +1] = (unsigned char) rayColor.y;
+            image[j*image_width*3 + i +2] = (unsigned char) rayColor.z;
         }
     }
 }
@@ -127,12 +122,10 @@ int main(int argc, char* argv[]) {
 
     /* Get All Meshes as Triangles*/
     for (auto &mesh: scene.meshes) {
-        std::vector<Triangle> mesh_faces;
         for (auto &face: mesh.faces) {
             triangles.emplace_back(scene.materials[mesh.material_id - 1], scene.vertex_data[face.v0_id - 1],
                                    scene.vertex_data[face.v1_id - 1], scene.vertex_data[face.v2_id - 1]);
         }
-//        meshes.emplace_back(scene.materials[mesh.material_id-1], mesh_faces);
     }
 
     /* Get All Cameras and run raytracer loop */
@@ -144,19 +137,9 @@ int main(int argc, char* argv[]) {
                                       cam_config.near_plane.w, cam_config.near_distance};
         int columnWidth = image_width / 8;
 
-        //unsigned char* image = new unsigned char [image_width * image_height * 3];
-        Vec3<int> **image;
-        image = new Vec3<int> *[image_width];
+        unsigned char* image = new unsigned char[image_width*image_height*3]{0, 0, 0};
 
-        for (int i = 0; i < image_width; i++) {
-            image[i] = new Vec3<int>[image_height];
-        }
 
-        for (int j = 0; j < image_height; j++) {
-            for (int i = 0; i < image_width; i++) {
-                image[i][j].x = image[i][j].y = image[i][j].z = 0;
-            }
-        }
 
         float pixel_width = (im_plane.right - im_plane.left) / image_width;
         float pixel_height = (im_plane.top - im_plane.bottom) / image_height;
@@ -176,6 +159,8 @@ int main(int argc, char* argv[]) {
 
         unsigned int thread_limit = std::thread::hardware_concurrency();
         std::vector<std::thread*> threads;
+        Ray ray(400,400,pixel_width, pixel_height, camera_bundle);
+        ray.computeColor(background_color,shadow_ray_epsilon,ambient_light,point_lights ,spheres,triangles);
         int ratio = image_height / thread_limit;
         for (unsigned int i = 0; i < thread_limit; i++) {
 
@@ -189,7 +174,7 @@ int main(int argc, char* argv[]) {
             for(int k = 0 ; k < i ; k++)
                 printf("\n");
             std::thread* thread = new std::thread (computeRaytracerThread, image, height_start, height_end, std::ref(camera_bundle),
-                               image_width, std::ref(spheres), std::ref(triangles),
+                               image_width, image_height, std::ref(spheres), std::ref(triangles),
                                std::ref(point_lights),
                                pixel_width, pixel_height);
             threads.push_back(thread);
@@ -200,8 +185,7 @@ int main(int argc, char* argv[]) {
             thread->join();
             delete thread;
         }
-            //write_ppm(cam_config.image_name.c_str(), image, image_width, image_height);
-        writePPM(image, image_width, image_height);
+        write_ppm(cam_config.image_name.c_str(),  image, image_width, image_height);
     }
     return 0;
 }

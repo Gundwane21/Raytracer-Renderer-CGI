@@ -67,34 +67,33 @@ Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsil
         for (int i = 0; i < point_lights.size(); i++) {
             Vec3<float> pointToLight = point_lights.at(i).position.subtVector(intersectionPoint);
             pointToLight = pointToLight.normalize();
-            /* Shadow Ray Intersection Test*/
-            Ray shadow_ray(intersectionPoint.addVector(surfaceNormal.multScalar(shadow_ray_epsilon)),
-                           pointToLight);
-            //check intersection
-            float minT_shadow = 9000;
-            bool is_in_shadow = false;
-            for (const auto & sphere : spheres) {
-                float t_shadow = shadow_ray.intersectRayWithSphere(sphere);
-                if (minT_shadow != 90000 && t_shadow >= 0) {
-                    is_in_shadow = true;
-                    break;
-                }
-            }
-            for (const auto & triangle : triangles) {
-                float t_shadow = shadow_ray.intersectRayWithTriangle(triangle);
-                if (minT_shadow != 90000 && t_shadow >= 0) {
-                    is_in_shadow = true;
-                    break;
-                }
-            }
-            if (is_in_shadow)
-                continue;
+//            /* Shadow Ray Intersection Test*/
+//            Ray shadow_ray(intersectionPoint.addVector(surfaceNormal.multScalar(shadow_ray_epsilon)),
+//                           pointToLight);
+//            //check intersection
+//            float minT_shadow = 9000;
+//            bool is_in_shadow = false;
+//            for (const auto & sphere : spheres) {
+//                float t_shadow = shadow_ray.intersectRayWithSphere(sphere);
+//                if (minT_shadow != 90000 && t_shadow >= 0) {
+//                    is_in_shadow = true;
+//                    break;
+//                }
+//            }
+//            for (const auto & triangle : triangles) {
+//                float t_shadow = shadow_ray.intersectRayWithTriangle(triangle);
+//                if (minT_shadow != 90000 && t_shadow >= 0) {
+//                    is_in_shadow = true;
+//                    break;
+//                }
+//            }
+//            if (is_in_shadow)
+//                continue;
             /* Calculate Diffuse For all point light sources*/
-            float dotProduct = pointToLight.dot(surfaceNormal);
+            float dotProduct = pointToLight.dot(surfaceNormal)/(sqrt(pointToLight.dot(pointToLight))*sqrt(surfaceNormal.dot(surfaceNormal)));
             // homemade clamp function
             float cosine = std::max(float(0), dotProduct);
             cosine = std::min(cosine, float(1));
-
             // inverse square law
             float inverse_square_law_denom = point_lights.at(i).position.findEuclidianDistanceSquared(
                     intersectionPoint);
@@ -118,7 +117,7 @@ Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsil
             inverse_square_law = cosineHalfVecPhongExp / inverse_square_law_denom;
             Vec3<float> specular_component = point_lights.at(i).intensity.multScalar(inverse_square_law);
             specular_component = specular_component.multVectorsElementwise(material.specular);
-            finalColor = finalColor.addVector(specular_component);
+//            finalColor = finalColor.addVector(specular_component);
         }
     }
    return finalColor;
