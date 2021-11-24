@@ -24,36 +24,17 @@ Ray::Ray(Vec3<float> origin,Vec3<float> direction){
 
 Vec3<float> Ray::computeColor( Vec3<int>& background_color,float& shadow_ray_epsilon,
                                Vec3<float>& ambient_light , std::vector<PointLightSource> & point_lights, std::vector<Sphere> & spheres
-                             , std::vector<Triangle> & triangles){
-    float  minT = float_max;
-    float t;    //intersection t
+                             , std::vector<Triangle> & triangles, int recursion_depth){
+
     Shape * shape = NULL;
+    /* INTERSECT RAY WITH ANY SHAPE GET THE CLOSEST */
+    float minT = this->intersectRayWithAnyShape(spheres,triangles,shape);
     Vec3<float> intersectionPoint;
-
-    //check intersection
-    for(auto & sphere: spheres){
-        t = intersectRayWithSphere(sphere);
-        if (t < minT && t >= 0){ //could be t >= 0
-            //color = spheres.at(i).color;
-            minT = t;
-            shape = &sphere;
-        }
-
-    }
-
-    for(auto & triangle: triangles){
-        t = intersectRayWithTriangle(triangle);
-        if (t < minT && t >= 0){ //could be t >= 0
-            minT = t;
-            shape = &triangle;
-        }
-    }
 
     // if NO INTERSECTION
     Vec3<float> finalColor(background_color.x,background_color.y,background_color.z);
+
     /* AMBIENT COMPONENT */
-    //  TODO: check if intersection exists
-    //  if( intersection_exists ){}
     if (shape) {
         Vec3<float> material_ambient_reflectance = shape->material.ambient;
         finalColor = ambient_light.multVectorsElementwise(material_ambient_reflectance);
@@ -63,33 +44,18 @@ Vec3<float> Ray::computeColor( Vec3<int>& background_color,float& shadow_ray_eps
         Vec3<float> surfaceNormal = shape->calculateNormalVector(intersectionPoint);
         surfaceNormal = surfaceNormal.normalize();
 
-        Vec3<float> pointToCameraVector = this->o.subtVector(intersectionPoint); // Unnecessary for triangle but it's okay
+        Vec3<float> pointToCameraVector = this->o.subtVector(intersectionPoint);
         pointToCameraVector = pointToCameraVector.normalize();
 
         for (auto & i : point_lights) {
             PointLightSource point_light = i;
             Vec3<float> pointToLight = point_light.position.subtVector(intersectionPoint);
             pointToLight = pointToLight.normalize();
-//            /* Shadow Ray Intersection Test*/
-            Ray shadow_ray(intersectionPoint.addVector(surfaceNormal.multScalar(shadow_ray_epsilon)),
+            /* Shadow Ray Intersection Test*/
+            Ray shadow_ray(intersectionPoint.addVector(pointToLight.multScalar(shadow_ray_epsilon)),
                            pointToLight);
-//            //check intersection
-            float minT_shadow = float_max;
-            bool is_in_shadow = false;
-            for (const auto & sphere : spheres) {
-                float t_shadow = shadow_ray.intersectRayWithSphere(sphere);
-                if (t_shadow < minT_shadow && t_shadow >= 0) {
-                    is_in_shadow = true;
-                    break;
-                }
-            }
-            for (const auto & triangle : triangles) {
-                float t_shadow = shadow_ray.intersectRayWithTriangle(triangle);
-                if (t_shadow < minT_shadow && t_shadow >= 0) {
-                    is_in_shadow = true;
-                    break;
-                }
-            }
+            //check shadow ray intersection
+            bool is_in_shadow = shadow_ray.intersectShadowRayIsInShadow(spheres,triangles);
             if (is_in_shadow)
                 continue;
 
@@ -110,7 +76,6 @@ Vec3<float> Ray::computeColor( Vec3<int>& background_color,float& shadow_ray_eps
             Vec3<float> diffuse_component = point_intensity.multVectorsElementwise(material.diffuse);
             finalColor = finalColor.addVector(diffuse_component);
 
-
             /* Calculate Specular For all point light sources */
             Vec3<float> halfVector = pointToLight.addVector(pointToCameraVector);
             halfVector = halfVector.normalize();
@@ -126,6 +91,25 @@ Vec3<float> Ray::computeColor( Vec3<int>& background_color,float& shadow_ray_eps
             Vec3<float> specular_component = i.intensity.multScalar(inverse_square_law);
             specular_component = specular_component.multVectorsElementwise(material.specular);
             finalColor = finalColor.addVector(specular_component);
+
+            if(material.is_mirror && recursion_depth>0 && (material.mirror.x != 0 || material.mirror.y !=0 || material.mirror.z != 0 )){
+                float dotProductMirror = surfaceNormal.dot(pointToCameraVector);
+                dotProductMirror = std::max(float(0), dotProductMirror);
+                dotProductMirror = std::min(dotProductMirror, float(1));
+
+                Vec3<float> mirrorVector = surfaceNormal.multScalar(2*dotProductMirror);
+                mirrorVector = mirrorVector.subtVector(pointToCameraVector);
+                mirrorVector = mirrorVector.normalize();
+
+                Ray mirror_ray = Ray(intersectionPoint.addVector(mirrorVector.multScalar(shadow_ray_epsilon)), mirrorVector);
+                //Vec3<float> no_light = {0,0,0};
+                Vec3<float> reflected = mirror_ray.computeColor(background_color, shadow_ray_epsilon, ambient_light, point_lights, spheres, triangles, recursion_depth-1);
+                reflected = reflected.multVectorsElementwise(material.mirror);
+
+                finalColor = finalColor.addVector(reflected);
+            }
+
+
         }
     }
 
@@ -136,8 +120,48 @@ Vec3<float> Ray::computeColor( Vec3<int>& background_color,float& shadow_ray_eps
     return finalColor;
 }
 
+float Ray::intersectRayWithAnyShape(std::vector<Sphere>& spheres , std::vector<Triangle> & triangles, Shape* & shape_ptr  ){
+    float t= -1  ;
+    float minT = float_max;
+    //check intersection
+    for(auto & sphere: spheres){
+        t = intersectRayWithSphere(sphere);
+        if (t < minT && t >= 0){ //could be t >= 0
+            //color = spheres.at(i).color;
+            minT = t;
+            shape_ptr = &sphere;
+        }
 
-float Ray::intersectRayWithSphere( Sphere sphere){
+    }
+
+    for(auto & triangle: triangles){
+        t = intersectRayWithTriangle(triangle);
+        if (t < minT && t >= 0){ //could be t >= 0
+            minT = t;
+            shape_ptr = &triangle;
+        }
+    }
+    return minT;
+}
+
+bool Ray::intersectShadowRayIsInShadow(std::vector<Sphere>& spheres , std::vector<Triangle> & triangles ){
+    float minT_shadow = float_max;
+    for ( auto & sphere : spheres) {
+        float t_shadow = this->intersectRayWithSphere(sphere);
+        if (t_shadow < minT_shadow && t_shadow >= 0) {
+            return true;
+        }
+    }
+    for ( auto & triangle : triangles) {
+        float t_shadow = this->intersectRayWithTriangle(triangle);
+        if (t_shadow < minT_shadow && t_shadow >= 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+float Ray::intersectRayWithSphere( Sphere& sphere){
     float  A,B,C;
     float delta;
     Vec3<float> c  = sphere.center;
@@ -170,7 +194,7 @@ float Ray::calculateDeterminant(const std::vector<std::vector<float>> & matrix )
     return matrix_00 - matrix_10 + matrix_20;
 }
 
-float Ray::intersectRayWithTriangle(Triangle triangle){
+float Ray::intersectRayWithTriangle(Triangle& triangle){
 
 //    BFC  calculating the dot product of the ray direction with
 //    the normal vector of the triangle. If the sign of the result is positive, then that triangle is
