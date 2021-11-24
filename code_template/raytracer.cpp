@@ -179,34 +179,34 @@ int main(int argc, char* argv[]) {
              set pixel color to value computed from hit point, light, and n
          */
 
-//        unsigned int thread_limit = std::thread::hardware_concurrency();
-//        std::vector<std::thread*> threads;
+        unsigned int thread_limit = std::thread::hardware_concurrency();
+        std::vector<std::thread*> threads;
 ////        Ray ray(400,400,pixel_width, pixel_height, camera_bundle);
 ////        ray.computeColor(background_color,shadow_ray_epsilon,ambient_light,point_lights ,spheres,triangles);
-//        int ratio = image_height / thread_limit;
-//        for (unsigned int i = 0; i < thread_limit; i++) {
-//
-//            int height_start = ratio * i;
-//            int height_end = ratio * (i + 1);
-//
-//            if (i == thread_limit - 1) {
-//                height_end = image_height;
-//            }
-//            printf("start:%d, end: %d\n", height_start, height_end);
-//            for(int k = 0 ; k < i ; k++)
-//                printf("\n");
-//            std::thread* thread = new std::thread(computeRaytracerThread, image, height_start, height_end, std::ref(camera_bundle),
-//                               image_width, image_height, std::ref(spheres), std::ref(triangles),
-//                               std::ref(point_lights),
-//                               pixel_width, pixel_height, scene.max_recursion_depth);
-//            threads.push_back(thread);
-//
-//
-//        }
-//        for (auto & thread: threads){
-//            thread->join();
-//            delete thread;
-//        }
+        int ratio = image_height / thread_limit;
+        for (unsigned int i = 0; i < thread_limit; i++) {
+
+            int height_start = ratio * i;
+            int height_end = ratio * (i + 1);
+
+            if (i == thread_limit - 1) {
+                height_end = image_height;
+            }
+            printf("start:%d, end: %d\n", height_start, height_end);
+            for(int k = 0 ; k < i ; k++)
+                printf("\n");
+            std::thread* thread = new std::thread(computeRaytracerThread, image, height_start, height_end, std::ref(camera_bundle),
+                               image_width, image_height, std::ref(spheres), std::ref(triangles),
+                               std::ref(point_lights),
+                               pixel_width, pixel_height, scene.max_recursion_depth);
+            threads.push_back(thread);
+
+
+        }
+        for (auto & thread: threads){
+            thread->join();
+            delete thread;
+        }
         write_ppm(cam_config.image_name.c_str(),  image, image_width, image_height);
     }
     clock_t end = clock();

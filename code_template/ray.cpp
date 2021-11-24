@@ -47,6 +47,7 @@ Vec3<float> Ray::computeColor( Vec3<int>& background_color,float& shadow_ray_eps
         Vec3<float> pointToCameraVector = this->o.subtVector(intersectionPoint);
         pointToCameraVector = pointToCameraVector.normalize();
 
+        Material material = shape->material;
         for (auto & i : point_lights) {
             PointLightSource point_light = i;
             Vec3<float> pointToLight = point_light.position.subtVector(intersectionPoint);
@@ -72,7 +73,6 @@ Vec3<float> Ray::computeColor( Vec3<int>& background_color,float& shadow_ray_eps
 
             Vec3<float> point_intensity = i.intensity.multScalar(inverse_square_law);
 
-            Material material = shape->material;
             Vec3<float> diffuse_component = point_intensity.multVectorsElementwise(material.diffuse);
             finalColor = finalColor.addVector(diffuse_component);
 
@@ -92,24 +92,25 @@ Vec3<float> Ray::computeColor( Vec3<int>& background_color,float& shadow_ray_eps
             specular_component = specular_component.multVectorsElementwise(material.specular);
             finalColor = finalColor.addVector(specular_component);
 
-            if(material.is_mirror && recursion_depth>0 && (material.mirror.x != 0 || material.mirror.y !=0 || material.mirror.z != 0 )){
-                float dotProductMirror = surfaceNormal.dot(pointToCameraVector);
-                dotProductMirror = std::max(float(0), dotProductMirror);
-                dotProductMirror = std::min(dotProductMirror, float(1));
-
-                Vec3<float> mirrorVector = surfaceNormal.multScalar(2*dotProductMirror);
-                mirrorVector = mirrorVector.subtVector(pointToCameraVector);
-                mirrorVector = mirrorVector.normalize();
-
-                Ray mirror_ray = Ray(intersectionPoint.addVector(mirrorVector.multScalar(shadow_ray_epsilon)), mirrorVector);
-                //Vec3<float> no_light = {0,0,0};
-                Vec3<float> reflected = mirror_ray.computeColor(background_color, shadow_ray_epsilon, ambient_light, point_lights, spheres, triangles, recursion_depth-1);
-                reflected = reflected.multVectorsElementwise(material.mirror);
-
-                finalColor = finalColor.addVector(reflected);
-            }
 
 
+
+        }
+        if(material.is_mirror && recursion_depth>0 && (material.mirror.x != 0 || material.mirror.y !=0 || material.mirror.z != 0 )){
+            float dotProductMirror = surfaceNormal.dot(pointToCameraVector);
+            dotProductMirror = std::max(float(0), dotProductMirror);
+            dotProductMirror = std::min(dotProductMirror, float(1));
+
+            Vec3<float> mirrorVector = surfaceNormal.multScalar(2*dotProductMirror);
+            mirrorVector = mirrorVector.subtVector(pointToCameraVector);
+            mirrorVector = mirrorVector.normalize();
+
+            Ray mirror_ray = Ray(intersectionPoint.addVector(mirrorVector.multScalar(shadow_ray_epsilon)), mirrorVector);
+            //Vec3<float> no_light = {0,0,0};
+            Vec3<float> reflected = mirror_ray.computeColor(background_color, shadow_ray_epsilon, ambient_light, point_lights, spheres, triangles, recursion_depth);
+            reflected = reflected.multVectorsElementwise(material.mirror);
+
+            finalColor = finalColor.addVector(reflected);
         }
     }
 
