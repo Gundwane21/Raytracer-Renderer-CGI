@@ -3,7 +3,7 @@
 
 
 #include "ray.h"
-
+float float_max =std::numeric_limits<float>::max();
 
 Ray::Ray(const int i, const int j, const float pixel_width, const float pixel_height, const CameraBundle& cb){
     float s_u, s_v;
@@ -22,11 +22,11 @@ Ray::Ray(Vec3<float> origin,Vec3<float> direction){
     this->d = direction;
 }
 
-Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsilon,
-                               Vec3<float> ambient_light , std::vector<PointLightSource> & point_lights, std::vector<Sphere> & spheres
+Vec3<float> Ray::computeColor( Vec3<int>& background_color,float& shadow_ray_epsilon,
+                               Vec3<float>& ambient_light , std::vector<PointLightSource> & point_lights, std::vector<Sphere> & spheres
                              , std::vector<Triangle> & triangles){
-    float  minT = 90000; //std::numeric_limits<float>::max();
-    float t;//intersection t
+    float  minT = float_max;
+    float t;    //intersection t
     Shape * shape = NULL;
     Vec3<float> intersectionPoint;
 
@@ -44,12 +44,10 @@ Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsil
     for(auto & triangle: triangles){
         t = intersectRayWithTriangle(triangle);
         if (t < minT && t >= 0){ //could be t >= 0
-            // TODO: HOW TO DETERMINE COLOR
             minT = t;
             shape = &triangle;
         }
     }
-
 
     // if NO INTERSECTION
     Vec3<float> finalColor(background_color.x,background_color.y,background_color.z);
@@ -59,50 +57,60 @@ Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsil
     if (shape) {
         Vec3<float> material_ambient_reflectance = shape->material.ambient;
         finalColor = ambient_light.multVectorsElementwise(material_ambient_reflectance);
+
         intersectionPoint = this->o.addVector(this->d.multScalar(minT));
+
         Vec3<float> surfaceNormal = shape->calculateNormalVector(intersectionPoint);
         surfaceNormal = surfaceNormal.normalize();
+
         Vec3<float> pointToCameraVector = this->o.subtVector(intersectionPoint); // Unnecessary for triangle but it's okay
         pointToCameraVector = pointToCameraVector.normalize();
-        for (int i = 0; i < point_lights.size(); i++) {
-            Vec3<float> pointToLight = point_lights.at(i).position.subtVector(intersectionPoint);
+
+        for (auto & i : point_lights) {
+            PointLightSource point_light = i;
+            Vec3<float> pointToLight = point_light.position.subtVector(intersectionPoint);
             pointToLight = pointToLight.normalize();
 //            /* Shadow Ray Intersection Test*/
-//            Ray shadow_ray(intersectionPoint.addVector(surfaceNormal.multScalar(shadow_ray_epsilon)),
-//                           pointToLight);
+            Ray shadow_ray(intersectionPoint.addVector(surfaceNormal.multScalar(shadow_ray_epsilon)),
+                           pointToLight);
 //            //check intersection
-//            float minT_shadow = 9000;
-//            bool is_in_shadow = false;
-//            for (const auto & sphere : spheres) {
-//                float t_shadow = shadow_ray.intersectRayWithSphere(sphere);
-//                if (minT_shadow != 90000 && t_shadow >= 0) {
-//                    is_in_shadow = true;
-//                    break;
-//                }
-//            }
-//            for (const auto & triangle : triangles) {
-//                float t_shadow = shadow_ray.intersectRayWithTriangle(triangle);
-//                if (minT_shadow != 90000 && t_shadow >= 0) {
-//                    is_in_shadow = true;
-//                    break;
-//                }
-//            }
-//            if (is_in_shadow)
-//                continue;
+            float minT_shadow = float_max;
+            bool is_in_shadow = false;
+            for (const auto & sphere : spheres) {
+                float t_shadow = shadow_ray.intersectRayWithSphere(sphere);
+                if (t_shadow < minT_shadow && t_shadow >= 0) {
+                    is_in_shadow = true;
+                    break;
+                }
+            }
+            for (const auto & triangle : triangles) {
+                float t_shadow = shadow_ray.intersectRayWithTriangle(triangle);
+                if (t_shadow < minT_shadow && t_shadow >= 0) {
+                    is_in_shadow = true;
+                    break;
+                }
+            }
+            if (is_in_shadow)
+                continue;
+
             /* Calculate Diffuse For all point light sources*/
-            float dotProduct = pointToLight.dot(surfaceNormal)/(sqrt(pointToLight.dot(pointToLight))*sqrt(surfaceNormal.dot(surfaceNormal)));
+            float dotProduct = pointToLight.dot(surfaceNormal);// /(sqrt(pointToLight.dot(pointToLight))*sqrt(surfaceNormal.dot(surfaceNormal)));
             // homemade clamp function
-            float cosine = std::max(float(0), dotProduct);
-            cosine = std::min(cosine, float(1));
+            float cosine = std::max((float)0, dotProduct);
+            //cosine = std::min(cosine, float(1));
+
             // inverse square law
-            float inverse_square_law_denom = point_lights.at(i).position.findEuclidianDistanceSquared(
+            float inverse_square_law_denom = i.position.findEuclidianDistanceSquared(
                     intersectionPoint);
             float inverse_square_law = cosine / inverse_square_law_denom;
-            Vec3<float> point_intensity = point_lights.at(i).intensity.multScalar(inverse_square_law);
+
+            Vec3<float> point_intensity = i.intensity.multScalar(inverse_square_law);
 
             Material material = shape->material;
             Vec3<float> diffuse_component = point_intensity.multVectorsElementwise(material.diffuse);
             finalColor = finalColor.addVector(diffuse_component);
+
+
             /* Calculate Specular For all point light sources */
             Vec3<float> halfVector = pointToLight.addVector(pointToCameraVector);
             halfVector = halfVector.normalize();
@@ -115,12 +123,17 @@ Vec3<float> Ray::computeColor( Vec3<int> background_color,float shadow_ray_epsil
             //TODO: check if normal and tolight vectors degree is 0 < x < 90
             float cosineHalfVecPhongExp = pow(cosineHalfVec, material.phong_exponent);
             inverse_square_law = cosineHalfVecPhongExp / inverse_square_law_denom;
-            Vec3<float> specular_component = point_lights.at(i).intensity.multScalar(inverse_square_law);
+            Vec3<float> specular_component = i.intensity.multScalar(inverse_square_law);
             specular_component = specular_component.multVectorsElementwise(material.specular);
-//            finalColor = finalColor.addVector(specular_component);
+            finalColor = finalColor.addVector(specular_component);
         }
     }
-   return finalColor;
+
+    finalColor.x = std::min(float(255),finalColor.x );
+    finalColor.y = std::min(float(255),finalColor.y );
+    finalColor.z = std::min(float(255),finalColor.z );
+
+    return finalColor;
 }
 
 
@@ -158,6 +171,15 @@ float Ray::calculateDeterminant(const std::vector<std::vector<float>> & matrix )
 }
 
 float Ray::intersectRayWithTriangle(Triangle triangle){
+
+//    BFC  calculating the dot product of the ray direction with
+//    the normal vector of the triangle. If the sign of the result is positive, then that triangle is
+//    ignored.
+
+    float  dot_product = this->d.dot(triangle.normal);
+    if (dot_product > 0 )
+        return -1;
+
     //Barycentric Method with Applying Cramer's Rule:
     std::vector<std::vector<float>> A(3, std::vector<float>(3));
     std::vector<std::vector<float>> B(3, std::vector<float>(3));

@@ -29,8 +29,8 @@ public:
     Ray(Vec3<float> origin,Vec3<float> direction);
     float intersectRayWithSphere(Sphere sphere);
 
-    Vec3<float> computeColor( Vec3<int> background_color,float shadow_ray_epsilon,
-                              Vec3<float> ambient_light , std::vector<PointLightSource> & point_lights, std::vector<Sphere> & spheres
+    Vec3<float> computeColor( Vec3<int>& background_color,float& shadow_ray_epsilon,
+                              Vec3<float>& ambient_light , std::vector<PointLightSource> & point_lights, std::vector<Sphere> & spheres
                               , std::vector<Triangle> & triangles);
     Vec3<float> calculateNormalVec(Vec3<float> intersection_point,Vec3<float> sphere_center_vertex);
 };

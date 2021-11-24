@@ -63,6 +63,9 @@ void computeRaytracerThread(unsigned char * image, int height_start, int height_
 
 
 int main(int argc, char* argv[]) {
+
+    clock_t begin = clock();
+
     // Sample usage for reading an XML scene file
     parser::Scene scene;
 
@@ -139,14 +142,33 @@ int main(int argc, char* argv[]) {
 
         unsigned char* image = new unsigned char[image_width*image_height*3]{0, 0, 0};
 
-
-
         float pixel_width = (im_plane.right - im_plane.left) / image_width;
         float pixel_height = (im_plane.top - im_plane.bottom) / image_height;
         Vec3<float> eye(cam_config.position);
         Vec3<float> gaze(cam_config.gaze);
         Vec3<float> up(cam_config.up);
         CameraBundle camera_bundle = {eye, gaze, up.cross(gaze.multScalar(-1.0)), cam_config.up, im_plane};
+
+//        for(int j = 0 ; j < image_height; j++){
+//            for(int i = 0; i < image_width*3; i+=3){
+//                Ray ray(i/3,j, pixel_width, pixel_height, camera_bundle);
+//                //std::cout<< j<< "/" << image_height << " | " << i << "/" << image_width << "\r";
+//                Vec3<float> pixel;
+//                Vec3<float> rayColor;
+//                pixel = ray.o.addVector(ray.d);
+//                rayColor = ray.computeColor(background_color,shadow_ray_epsilon,ambient_light,point_lights ,spheres,triangles);
+//
+//                if(rayColor.x > 255 || rayColor.x < 0  || rayColor.z > 255 || rayColor.z < 0  )
+//                    std::cout << "ray" << " "<< j << " "<< i << " x " << rayColor.x << std::endl;
+//                if( rayColor.y > 255 || rayColor.y < 0)
+//                    std::cout << "ray" << " " << j << " "<< i << " y " << rayColor.y << std::endl;
+//                if(rayColor.z> 255 || rayColor.z<0)
+//                    std::cout << "ray" << " " << j << " "<< i << " z " << rayColor.z << std::endl;
+//                image[j*image_width*3 + i] = (unsigned char) rayColor.x;
+//                image[j*image_width*3 + i +1] = (unsigned char) rayColor.y;
+//                image[j*image_width*3 + i +2] = (unsigned char) rayColor.z;
+//            }
+//        }
 
         /* RAY TRACER LOOP CAUTION */
         //TODO: implement the loop
@@ -187,5 +209,9 @@ int main(int argc, char* argv[]) {
         }
         write_ppm(cam_config.image_name.c_str(),  image, image_width, image_height);
     }
+    clock_t end = clock();
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    std::cout << " time spent  seconds: "  <<  time_spent << std::endl;
+    std::cout << " time spent minutes: "  <<  time_spent  / 60   << std::endl;
     return 0;
 }
