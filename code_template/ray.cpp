@@ -52,14 +52,11 @@ Vec3<float> Ray::computeColor( Vec3<int>& background_color,float& shadow_ray_eps
             PointLightSource point_light = i;
             Vec3<float> pointToLight = point_light.position.subtVector(intersectionPoint);
             pointToLight = pointToLight.normalize();
-
-            float toLightLen = i.position.findEuclidianDistanceSquared(
-                    intersectionPoint.addVector(pointToLight.multScalar(shadow_ray_epsilon)));
-
             /* Shadow Ray Intersection Test*/
+            float toLightLen = i.position.findEuclidianDistanceSquared(intersectionPoint.addVector(pointToLight.multScalar(shadow_ray_epsilon)));
             Ray shadow_ray(intersectionPoint.addVector(pointToLight.multScalar(shadow_ray_epsilon)),
-                           pointToLight);
-            //check shadow ray intersection
+                            pointToLight);
+            //check shadow  ray intersection
             bool is_in_shadow = shadow_ray.intersectShadowRayIsInShadow(spheres,triangles, sqrt(toLightLen));
             if (is_in_shadow)
                 continue;
@@ -118,9 +115,7 @@ Vec3<float> Ray::computeColor( Vec3<int>& background_color,float& shadow_ray_eps
         }
     }
 
-    finalColor.x = std::min(float(255),finalColor.x );
-    finalColor.y = std::min(float(255),finalColor.y );
-    finalColor.z = std::min(float(255),finalColor.z );
+
 
     return finalColor;
 }
@@ -149,18 +144,18 @@ float Ray::intersectRayWithAnyShape(std::vector<Sphere>& spheres , std::vector<T
     return minT;
 }
 
-bool Ray::intersectShadowRayIsInShadow(std::vector<Sphere>& spheres , std::vector<Triangle> & triangles, float lightVectorLen ){
+bool Ray::intersectShadowRayIsInShadow(std::vector<Sphere>& spheres , std::vector<Triangle> & triangles, float vector_len){
+    float t_shadow = -1;
 
     for ( auto & sphere : spheres) {
-        float t_shadow = this->intersectRayWithSphere(sphere);
-        if (t_shadow != -1 && t_shadow>0.001 && t_shadow < lightVectorLen ) {
+        t_shadow = this->intersectRayWithSphere(sphere);
+        if (t_shadow != -1 && t_shadow >= 0 && t_shadow < vector_len) {
             return true;
         }
     }
     for ( auto & triangle : triangles) {
-
-        float t_shadow = this->intersectRayWithTriangle(triangle);
-        if (t_shadow != -1 && t_shadow > 0.001 && t_shadow < lightVectorLen) {
+        t_shadow = this->intersectRayWithTriangle(triangle);
+        if (t_shadow != -1 && t_shadow >= 0 && t_shadow < vector_len) {
             return true;
         }
     }
