@@ -30,7 +30,7 @@ public:
     float intersectRayWithAnyShape(std::vector<Sphere>& spheres , std::vector<Triangle> & triangles, Shape* & shape_ptr  );
     float intersectRayWithSphere(Sphere& sphere);
     float intersectRayWithTriangle(Triangle& triangle);
-    bool intersectShadowRayIsInShadow(std::vector<Sphere>& spheres , std::vector<Triangle> & triangles );
+    bool intersectShadowRayIsInShadow(std::vector<Sphere>& spheres , std::vector<Triangle> & triangles, float );
 
     static float calculateDeterminant(const std::vector<std::vector<float>> & matrix);
 

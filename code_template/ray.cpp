@@ -53,10 +53,11 @@ Vec3<float> Ray::computeColor( Vec3<int>& background_color,float& shadow_ray_eps
             Vec3<float> pointToLight = point_light.position.subtVector(intersectionPoint);
             pointToLight = pointToLight.normalize();
             /* Shadow Ray Intersection Test*/
+            float toLightLen = i.position.findEuclidianDistanceSquared(intersectionPoint.addVector(pointToLight.multScalar(shadow_ray_epsilon)));
             Ray shadow_ray(intersectionPoint.addVector(pointToLight.multScalar(shadow_ray_epsilon)),
-                           pointToLight);
-            //check shadow ray intersection
-            bool is_in_shadow = shadow_ray.intersectShadowRayIsInShadow(spheres,triangles);
+                            pointToLight);
+            //check shadow  ray intersection
+            bool is_in_shadow = shadow_ray.intersectShadowRayIsInShadow(spheres,triangles, sqrt(toLightLen));
             if (is_in_shadow)
                 continue;
 
@@ -107,16 +108,14 @@ Vec3<float> Ray::computeColor( Vec3<int>& background_color,float& shadow_ray_eps
 
             Ray mirror_ray = Ray(intersectionPoint.addVector(mirrorVector.multScalar(shadow_ray_epsilon)), mirrorVector);
             //Vec3<float> no_light = {0,0,0};
-            Vec3<float> reflected = mirror_ray.computeColor(background_color, shadow_ray_epsilon, ambient_light, point_lights, spheres, triangles, recursion_depth);
+            Vec3<float> reflected = mirror_ray.computeColor(background_color, shadow_ray_epsilon, ambient_light, point_lights, spheres, triangles, recursion_depth-1);
             reflected = reflected.multVectorsElementwise(material.mirror);
 
             finalColor = finalColor.addVector(reflected);
         }
     }
 
-    finalColor.x = std::min(float(255),finalColor.x );
-    finalColor.y = std::min(float(255),finalColor.y );
-    finalColor.z = std::min(float(255),finalColor.z );
+
 
     return finalColor;
 }
@@ -145,17 +144,18 @@ float Ray::intersectRayWithAnyShape(std::vector<Sphere>& spheres , std::vector<T
     return minT;
 }
 
-bool Ray::intersectShadowRayIsInShadow(std::vector<Sphere>& spheres , std::vector<Triangle> & triangles ){
-    float minT_shadow = float_max;
+bool Ray::intersectShadowRayIsInShadow(std::vector<Sphere>& spheres , std::vector<Triangle> & triangles, float vector_len){
+    float t_shadow = -1;
+
     for ( auto & sphere : spheres) {
-        float t_shadow = this->intersectRayWithSphere(sphere);
-        if (t_shadow < minT_shadow && t_shadow >= 0) {
+        t_shadow = this->intersectRayWithSphere(sphere);
+        if (t_shadow != -1 && t_shadow >= 0 && t_shadow < vector_len) {
             return true;
         }
     }
     for ( auto & triangle : triangles) {
-        float t_shadow = this->intersectRayWithTriangle(triangle);
-        if (t_shadow < minT_shadow && t_shadow >= 0) {
+        t_shadow = this->intersectRayWithTriangle(triangle);
+        if (t_shadow != -1 && t_shadow >= 0 && t_shadow < vector_len) {
             return true;
         }
     }

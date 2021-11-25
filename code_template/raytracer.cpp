@@ -54,6 +54,10 @@ void computeRaytracerThread(unsigned char * image, int height_start, int height_
             Vec3<float> rayColor;
             pixel = ray.o.addVector(ray.d);
             rayColor = ray.computeColor(background_color,shadow_ray_epsilon,ambient_light,point_lights ,spheres,triangles, max_recursion_depth);
+            rayColor.x = std::min(float(255), rayColor.x);
+            rayColor.y = std::min(float(255), rayColor.y);
+            rayColor.z = std::min(float(255), rayColor.z);
+
             image[j*image_width*3 + i] = (unsigned char) rayColor.x;
             image[j*image_width*3 + i +1] = (unsigned char) rayColor.y;
             image[j*image_width*3 + i +2] = (unsigned char) rayColor.z;
