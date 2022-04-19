@@ -33,6 +33,7 @@ Basic illumination model is used in this project. Ambient, Diffuse and Specular 
 
 Change the input image to render different images. Bare in mind that raytracing takes time.Depending on your computer some image renderings take upto 30 - 50 minutes  
 ```
+cd code_template
 make 
 ./raytracer sample_scenes_v3/inputs/simple.xml
 ./raytracer sample_scenes_v3/inputs/simple_reflectance.xml
