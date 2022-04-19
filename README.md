@@ -12,23 +12,22 @@ Basic illumination model is used in this project. Ambient, Diffuse and Specular 
 
 # Some rendered images
 
+![Screenshot](sample_scenes_v3/outputs/bfc_on/monkey.png)
+![Screenshot](sample_scenes_v3/outputs/bfc_on/berserker.png)
+![Screenshot](sample_scenes_v3/outputs/bfc_on/bunny.png)
+![Screenshot](sample_scenes_v3/outputs/bfc_on/dragon_lowres.png)
+![Screenshot](sample_scenes_v3/outputs/bfc_on/horse_and_mug.png)
+![Screenshot](sample_scenes_v3/outputs/bfc_on/killeroo.png)
 ![Screenshot](sample_scenes_v3/outputs/bfc_on/Car.png)
- create mode 100644 sample_scenes_v3/outputs/bfc_on/Car_front.png
- create mode 100644 sample_scenes_v3/outputs/bfc_on/berserker.png
- create mode 100644 sample_scenes_v3/outputs/bfc_on/bunny.png
- create mode 100644 sample_scenes_v3/outputs/bfc_on/cornellbox_front.png
- create mode 100644 sample_scenes_v3/outputs/bfc_on/cornellbox_inverse.png
- create mode 100644 sample_scenes_v3/outputs/bfc_on/cornellbox_top.png
- create mode 100644 sample_scenes_v3/outputs/bfc_on/dragon_lowres.png
- create mode 100644 sample_scenes_v3/outputs/bfc_on/horse_and_mug.png
- create mode 100644 sample_scenes_v3/outputs/bfc_on/killeroo.png
- create mode 100644 sample_scenes_v3/outputs/bfc_on/low_poly_scene.png
- create mode 100644 sample_scenes_v3/outputs/bfc_on/mirror_spheres.png
- create mode 100644 sample_scenes_v3/outputs/bfc_on/monkey.png
- create mode 100644 sample_scenes_v3/outputs/bfc_on/simple.png
- create mode 100644 sample_scenes_v3/outputs/bfc_on/simple_reflectance.png
- create mode 100644 sample_scenes_v3/outputs/bfc_on/simple_shading.png
-
+![Screenshot](sample_scenes_v3/outputs/bfc_on/Car_front.png)
+![Screenshot](sample_scenes_v3/outputs/bfc_on/cornellbox_front.png)
+![Screenshot](sample_scenes_v3/outputs/bfc_on/cornellbox_inverse.png)
+![Screenshot](sample_scenes_v3/outputs/bfc_on/cornellbox_top.png)
+![Screenshot](sample_scenes_v3/outputs/bfc_on/low_poly_scene.png)
+![Screenshot](sample_scenes_v3/outputs/bfc_on/mirror_spheres.png)
+![Screenshot](sample_scenes_v3/outputs/bfc_on/simple.png)
+![Screenshot](sample_scenes_v3/outputs/bfc_on/simple_reflectance.png)
+![Screenshot](sample_scenes_v3/outputs/bfc_on/simple_shading.png)
 
 # Run 
 
